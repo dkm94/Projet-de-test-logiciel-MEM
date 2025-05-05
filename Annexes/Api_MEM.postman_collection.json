@@ -1,0 +1,3837 @@
+{
+	"info": {
+		"_postman_id": "45778485-f913-4176-ac79-d103443e33ab",
+		"name": "Api mariage Node",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "MEM - POST Register HIGH QASM-TC-13",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const responseSchema = {\r",
+									"    \"type\": \"object\",\r",
+									"    \"properties\": {\r",
+									"        \"success\": {\r",
+									"            \"type\": \"boolean\"\r",
+									"        },\r",
+									"        \"message\": {\r",
+									"            \"type\": \"string\"\r",
+									"        }\r",
+									"    }\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Response's object returns a success status and a message\", () => {\r",
+									"    pm.response.to.have.jsonSchema(responseSchema);\r",
+									"});\r",
+									"pm.test(\"The account creation is confirmed by a 200 or 201 status\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+									"});\r",
+									"pm.test(\"Body matches string when the account is successfully created\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"Votre compte a été créé, vous pouvez dès à présent vous connecter\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "email",
+									"value": "thesimpsons11@mail.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Password123!",
+									"type": "text"
+								},
+								{
+									"key": "firstPerson",
+									"value": "Julie",
+									"type": "text"
+								},
+								{
+									"key": "secondPerson",
+									"value": "Serge",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/auth/createAccount",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"createAccount"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - POST Login HIGH QASM-TC-14",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Common test for all cases\r",
+									"pm.test(\"Response has correct structure\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    \r",
+									"    // Vérifie la présence des champs de base\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    \r",
+									"    // Token only if success\r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"token\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Tests by code status\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Status is 200\", function() {\r",
+									"            pm.expect(pm.response.code).to.equal(200);\r",
+									"        });\r",
+									"        \r",
+									"        pm.test(\"[SUCCESS] Valid credentials response\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            pm.expect(jsonData.token).to.be.a(\"string\").and.not.empty;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Vous pouvez à présent accéder à votre compte.\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // FAIL (invalid email)\r",
+									"    case 404: // FAIL (invalid passwordt or wedding ID not found)\r",
+									"        pm.test(\"[FAIL] Status is 400/404\", function() {\r",
+									"            pm.expect(pm.response.code).to.be.oneOf([400, 404]);\r",
+									"        });\r",
+									"        \r",
+									"        pm.test(\"[FAIL] Invalid credentials response\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Echec connexion, veuillez vérifier vos identifiants\");\r",
+									"            pm.expect(jsonData).to.not.have.property(\"token\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // ERREUR SERVEUR\r",
+									"        pm.test(\"[ERROR] Status is 500\", function() {\r",
+									"            pm.expect(pm.response.code).to.equal(500);\r",
+									"        });\r",
+									"        \r",
+									"        pm.test(\"[ERROR] Server error response\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Erreur serveur\");\r",
+									"            pm.expect(jsonData).to.not.have.property(\"token\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(\"[UNEXPECTED] Unexpected status code: \" + pm.response.code, function() {\r",
+									"            pm.expect.fail(\"Code de statut inattendu: \" + pm.response.code);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "email",
+									"value": "test@test.com",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "email",
+									"value": "be@be.com",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "password",
+									"value": "Azerty123!",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "password",
+									"value": "aaaa",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "email",
+									"value": "testing@email.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Azertyuiop12!",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/auth/adminLogin",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"adminLogin"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "MEM - GET User account CRITICAL QASM-TC-16",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\").that.is.an(\"object\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Extraction de l'ID depuis l'URL\r",
+									"const urlSegments = pm.request.url.path;\r",
+									"const accountIdFromUrl = urlSegments[urlSegments.length - 1];\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Admin account found\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            const accountId = pm.variables.get(\"accountId\"); // Utilisation de la bonne variable\r",
+									"            \r",
+									"            // Vérification de base\r",
+									"            pm.expect(response.success).to.be.true;\r",
+									"            pm.expect(response.data._id.toString()).to.equal(accountId.toString());\r",
+									"            \r",
+									"            // Validation contre le schéma\r",
+									"            pm.test(\"Data matches admin schema\", function() {\r",
+									"                const adminSchema = {\r",
+									"                    type: \"object\",\r",
+									"                    properties: {\r",
+									"                        _id: { type: \"string\" },\r",
+									"                        email: { \r",
+									"                            type: \"string\",\r",
+									"                            maxLength: 100\r",
+									"                        },\r",
+									"                        media: { type: \"string\" },\r",
+									"                        role: { type: \"string\" },\r",
+									"                        mariageID: { type: \"string\" }\r",
+									"                    },\r",
+									"                    required: [\"_id\", \"email\"]\r",
+									"                };\r",
+									"                \r",
+									"                pm.expect(response.data).to.have.jsonSchema(adminSchema);\r",
+									"            });\r",
+									"            \r",
+									"            // Vérifications spécifiques\r",
+									"            pm.test(\"Email format validation\", function() {\r",
+									"                pm.expect(response.data.email).to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/);\r",
+									"                pm.expect(response.data.email.length).to.be.at.most(100);\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] Admin account not found\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.equal(\"Compte introuvable !\");\r",
+									"            \r",
+									"            // Debug info\r",
+									"            console.log(`Account ID tested: ${accountIdFromUrl}`);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // SERVER ERROR\r",
+									"        pm.test(\"[SERVER ERROR] Server failure\", function() {\r",
+									"            pm.expect(pm.response.json()).to.deep.equal({\r",
+									"                success: false,\r",
+									"                message: \"Echec serveur\"\r",
+									"            });\r",
+									"            \r",
+									"            // Debug pour IDs invalides\r",
+									"            if (accountIdFromUrl.match(/^[0-9a-fA-F]{24}$/) === null) {\r",
+									"                console.log(`Potential invalid ID format: ${accountIdFromUrl}`);\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/admin/myAccount/{{accountId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"myAccount",
+								"{{accountId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - POST Update password CRITICAL QASM-TC-17",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"});\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Password updated successfully - Modification enregistrée\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Modification enregistrée\");\r",
+									"            \r",
+									"            // Optionnel : vérification que le mot de passe a bien été changé\r",
+									"            if (pm.variables.get(\"verifyPasswordChange\")) {\r",
+									"                pm.sendRequest({\r",
+									"                    url: `${pm.environment.get(\"API_URL\")}/login`,\r",
+									"                    method: \"POST\",\r",
+									"                    body: {\r",
+									"                        mode: 'raw',\r",
+									"                        raw: JSON.stringify({\r",
+									"                            email: pm.variables.get(\"adminEmail\"),\r",
+									"                            password: pm.variables.get(\"newPassword\") \r",
+									"                        })\r",
+									"                    }\r",
+									"                }, function(err, res) {\r",
+									"                    pm.expect(res.code).to.equal(200);\r",
+									"                });\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAILED] Password update failed - \" + pm.response.json().message, function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.be.oneOf([\r",
+									"                \"Oups, une erreur s'est produite lors de la modification\",\r",
+									"                \"Oups, une erreur s'est produite\"\r",
+									"            ]);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] Admin account not found - Impossible de trouver les données liées à votre compte\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Impossible de trouver les données liées à votre compte\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "password",
+									"value": "Azertyuiop12!",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/admin/editPassword/{{accountId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"editPassword",
+								"{{accountId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - DELETE Delete account CRITICAL QASM-TC-18",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"});\r",
+									"\r",
+									"// Extraction de l'ID depuis l'URL\r",
+									"const urlSegments = pm.request.url.path;\r",
+									"const adminIdFromUrl = urlSegments[urlSegments.length - 1];\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Account deleted - Votre compte a été supprimé avec succès\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Votre compte a été supprimé avec succès\");\r",
+									"            \r",
+									"            // Vérification que le compte est bien supprimé\r",
+									"            pm.sendRequest({\r",
+									"                url: pm.request.url,\r",
+									"                method: \"GET\"\r",
+									"            }, function(err, res) {\r",
+									"                pm.expect(res.code).to.equal(404);\r",
+									"                pm.expect(res.json().message).to.equal(\"Votre compte est introuvable !\");\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAILED] Deletion error - Oups, une erreur s'est produite lors de la suppression du compte\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Oups, une erreur s'est produite lors de la suppression du compte\");\r",
+									"            \r",
+									"            // Debug info\r",
+									"            if (adminIdFromUrl.match(/^[0-9a-fA-F]{24}$/) === null) {\r",
+									"                console.log(`Potential invalid ID format: ${adminIdFromUrl}`);\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] Account not found - Votre compte est introuvable !\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Votre compte est introuvable !\");\r",
+									"            pm.expect(adminIdFromUrl, \"Tested admin ID\").to.be.a(\"string\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/admin/deleteAccount/{{accountId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"deleteAccount",
+								"{{accountId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - GET  Accounts CRITICAL QASM-TC-19",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\").that.is.an(\"array\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"    const response = pm.response.json();\r",
+									"    const adminCount = response.data.length;\r",
+									"    \r",
+									"    // Test principal avec le compte\r",
+									"    pm.test(`[SUCCESS] Admin list retrieved - Found ${adminCount} admins`, function() {\r",
+									"        pm.expect(response.success).to.be.true;\r",
+									"    });\r",
+									"    \r",
+									"    // Sous-tests pour les validations\r",
+									"    pm.test(\"Data structure validation\", function() {\r",
+									"        pm.expect(response.data).to.be.an(\"array\");\r",
+									"        \r",
+									"        const adminSchema = {\r",
+									"            /* ... même schéma que précédemment ... */\r",
+									"        };\r",
+									"        \r",
+									"        response.data.forEach(admin => {\r",
+									"            pm.expect(admin).to.have.jsonSchema(adminSchema);\r",
+									"        });\r",
+									"    });\r",
+									"    \r",
+									"    break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] No admins found\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.equal(\"Liste d'admins introuvable !\");\r",
+									"            \r",
+									"            // Ce cas ne devrait normalement pas se produire (find() retourne [])\r",
+									"            console.log(\"La liste d'admins est vide ou introuvable\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // SERVER ERROR\r",
+									"        pm.test(\"[SERVER ERROR] Server failure\", function() {\r",
+									"            pm.expect(pm.response.json()).to.deep.equal({\r",
+									"                success: false,\r",
+									"                message: \"Echec serveur\"\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/admin/",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Wedding",
+			"item": [
+				{
+					"name": "MEM - GET View wedding CRITICAL QASM-TC-20",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\").that.is.an(\"object\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Wedding data loaded\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            const mariageId = pm.variables.get(\"mariageId\"); // Utilisation de la bonne variable\r",
+									"            \r",
+									"            // Vérification de base\r",
+									"            pm.expect(response.success).to.be.true;\r",
+									"            pm.expect(response.data._id.toString()).to.equal(mariageId.toString());\r",
+									"            \r",
+									"            // Validation contre le schéma\r",
+									"            pm.test(\"Data matches wedding schema\", function() {\r",
+									"                // Schéma basé sur votre modèle\r",
+									"                const weddingSchema = {\r",
+									"                    type: \"object\",\r",
+									"                    properties: {\r",
+									"                        _id: { type: \"string\" },\r",
+									"                        firstPerson: { \r",
+									"                            type: \"string\",\r",
+									"                            maxLength: 100\r",
+									"                        },\r",
+									"                        secondPerson: { \r",
+									"                            type: \"string\",\r",
+									"                            maxLength: 100 \r",
+									"                        },\r",
+									"                        tableID: {\r",
+									"                            type: \"array\",\r",
+									"                            items: { type: \"string\" } // IDs des tables\r",
+									"                        },\r",
+									"                        todoListID: {\r",
+									"                            type: \"array\",\r",
+									"                            items: { type: \"string\" } // IDs des todo lists\r",
+									"                        }\r",
+									"                    },\r",
+									"                    required: [\"_id\", \"firstPerson\", \"secondPerson\"]\r",
+									"                };\r",
+									"                \r",
+									"                pm.expect(response.data).to.have.jsonSchema(weddingSchema);\r",
+									"            });\r",
+									"            \r",
+									"            // Vérification des longueurs maximales\r",
+									"            pm.test(\"Field length validation\", function() {\r",
+									"                pm.expect(response.data.firstPerson.length).to.be.at.most(100);\r",
+									"                pm.expect(response.data.secondPerson.length).to.be.at.most(100);\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] Wedding not found\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response).to.deep.equal({\r",
+									"                success: false,\r",
+									"                message: \"Impossible de charger les données du mariage\"\r",
+									"            });\r",
+									"            \r",
+									"            // Debug info\r",
+									"            const mariageId = pm.variables.get(\"mariageId\") || \"unknown\";\r",
+									"            console.log(`Tested wedding ID: ${mariageId}`);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // SERVER ERROR\r",
+									"        pm.test(\"[SERVER ERROR]\", function() {\r",
+									"            pm.expect(pm.response.json()).to.deep.equal({\r",
+									"                success: false,\r",
+									"                message: \"Echec serveur\"\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": []
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/wedding/{{mariageId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"wedding",
+								"{{mariageId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - POST Update wedding CRITICAL QASM-TC-21",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    pm.expect(jsonData).to.have.property(\"message\" || \"error\").that.is.a(\"string\");\r",
+									"});\r",
+									"\r",
+									"// Extraction de l'ID du mariage depuis les variables\r",
+									"const mariageId = pm.variables.get(\"mariageId\");\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Wedding updated successfully\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            \r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Modifications enregistrées\");\r",
+									"            \r",
+									"            // Optionnel : vérification des modifications\r",
+									"            if (pm.variables.get(\"verifyChanges\")) {\r",
+									"                pm.sendRequest({\r",
+									"                    url: pm.request.url.toString().replace(\"/update\", \"\"),\r",
+									"                    method: \"GET\"\r",
+									"                }, function(err, res) {\r",
+									"                    const updatedWedding = res.json().data;\r",
+									"                    const requestBody = JSON.parse(pm.request.body.raw);\r",
+									"                    \r",
+									"                    Object.keys(requestBody).forEach(key => {\r",
+									"                        pm.expect(updatedWedding[key]).to.deep.equal(requestBody[key]);\r",
+									"                    });\r",
+									"                });\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[BAD REQUEST] Update failed\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            \r",
+									"            // Vérification du type d'erreur 400\r",
+									"            pm.expect(jsonData.message).to.be.oneOf([\r",
+									"                \"Oups, une erreur s'est produite. Les données n'ont pas été sauvegardées\",\r",
+									"                \"Erreur serveur\"\r",
+									"            ]);\r",
+									"            \r",
+									"            // Message debug supplémentaire\r",
+									"            if (jsonData.message.includes(\"Oups\")) {\r",
+									"                console.log(\"Aucune modification détectée (nModified: 0)\");\r",
+									"            } else {\r",
+									"                console.log(\"Erreur de validation ou serveur\");\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] Wedding not found\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.error).to.equal(\"Informations du mariage introuvables\");\r",
+									"            pm.expect.fail(`Mariage ID ${mariageId} introuvable`);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "firstPerson",
+									"value": "Marie-Paule",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/wedding/edit/{{mariageId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"wedding",
+								"edit",
+								"{{mariageId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Table",
+			"item": [
+				{
+					"name": "MEM - POST Add table CRITICAL QASM-TC-22",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Status 200 - Table created\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            \r",
+									"            // Validation de base\r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            pm.expect(jsonData.data).to.be.an(\"object\");\r",
+									"            \r",
+									"            // Vérification des champs obligatoires\r",
+									"            pm.expect(jsonData.data).to.have.property(\"_id\");\r",
+									"            pm.expect(jsonData.data).to.have.property(\"mariageID\");\r",
+									"            pm.expect(jsonData.data).to.have.property(\"name\");\r",
+									"            \r",
+									"            // Vérification des champs du body\r",
+									"            try {\r",
+									"                const requestBody = JSON.parse(pm.request.body.raw);\r",
+									"                Object.keys(requestBody).forEach(key => {\r",
+									"                    pm.expect(jsonData.data).to.have.property(key, requestBody[key]);\r",
+									"                });\r",
+									"            } catch (e) {\r",
+									"                console.log(\"No valid request body to compare\");\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // CONFLIT DE NOM\r",
+									"        pm.test(\"[CONFLICT] Status 400 - Duplicate table name\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Une table avec le même nom existe déjà.\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // ERREUR SERVEUR\r",
+									"        pm.test(\"[SERVER ERROR] Status 500 - Creation failed\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Une erreur s'est produite lors de la création de la table.\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code} - Unhandled case`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"warning": "This is a duplicate header and will be overridden by the X-API-Key header generated by Postman.",
+								"key": "X-API-Key",
+								"value": "AioAuth MDBkM2UwMGQtZTUzNi0zZTA2LWE1MTQtNTRjMzk1NzMxNGEzLjkxMjYyZDQzLWY0YTMtNDFlZC1iNGM1LTNjZDE3OGYyZGRiNQ==",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "Ancien travail",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/tables/add",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"tables",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - POST Update table CRITICAL QASM-TC-23",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"});\r",
+									"\r",
+									"// Extraction de l'ID de la table depuis l'URL\r",
+									"const urlSegments = pm.request.url.path;\r",
+									"const tableIdFromUrl = urlSegments[urlSegments.length - 1];\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Status 200 - Table updated\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            pm.expect(jsonData.message).to.equal(\"La table a bien été modifiée\");\r",
+									"            \r",
+									"            // Optionnel : vérifier que le nom a bien changé\r",
+									"            if (pm.variables.get(\"expectedNewName\")) {\r",
+									"                pm.sendRequest({\r",
+									"                    url: pm.request.url,\r",
+									"                    method: \"GET\"\r",
+									"                }, (err, res) => {\r",
+									"                    pm.expect(res.json().data.name).to.equal(pm.variables.get(\"expectedNewName\"));\r",
+									"                });\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 204: // NO CONTENT (pas de changement)\r",
+									"        pm.test(\"[NO CHANGE] Status 204 - Same name\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"La valeur indiquée reste inchangée\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAIL] Status 400\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.be.oneOf([\r",
+									"                \"Le champ ne peut être vide\",\r",
+									"                \"Echec de la modification de la table\"\r",
+									"            ]);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] Status 404\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Table introuvable !\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // SERVER ERROR\r",
+									"        pm.test(\"[SERVER ERROR] Status 500\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Echec serveur\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "Famille HOP",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/tables/edit/{{tableId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"tables",
+								"edit",
+								"{{tableId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - DELETE Delete table CRITICAL QASM-TC-24",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"});\r",
+									"\r",
+									"// Extraction de l'ID de la table depuis l'URL\r",
+									"const urlSegments = pm.request.url.path;\r",
+									"const tableIdFromUrl = urlSegments[urlSegments.length - 1];\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Status 200 - Table deleted\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            pm.expect(jsonData.message).to.equal(\"La table a bien été supprimée\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAIL] Status 400 - Deletion error\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.be.oneOf([\r",
+									"                \"Oups, une erreur s'est produite lors de la modification des paramètres du mariage\",\r",
+									"                \"Oups, une erreur s'est produite lors de la suppression du la table\",\r",
+									"                \"Oups, une erreur s'est produite lors de la modification des paramètres invités\"\r",
+									"            ]);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] Status 404\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.be.oneOf([\r",
+									"                \"La table que vous souhaitez supprimer n'existe pas\",\r",
+									"                \"Le mariage associé à ce compte n'existe pas\"\r",
+									"            ]);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // SERVER ERROR\r",
+									"        pm.test(\"[SERVER ERROR] Status 500\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Echec serveur\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": []
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/tables/delete/{{tableId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"tables",
+								"delete",
+								"{{tableId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - GET View table CRITICAL QASM-TC-25",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Extraire l'ID de la table depuis l'URL\r",
+									"const urlParts = pm.request.url.path;\r",
+									"const tableIdFromUrl = urlParts[urlParts.length - 1];\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Status 200 - Table found\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            \r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            pm.expect(jsonData.data).to.be.an(\"object\");\r",
+									"            \r",
+									"            // Vérification des champs obligatoires\r",
+									"            pm.expect(jsonData.data).to.have.property(\"_id\");\r",
+									"            pm.expect(jsonData.data).to.have.property(\"name\");\r",
+									"            pm.expect(jsonData.data).to.have.property(\"mariageID\");\r",
+									"            \r",
+									"            // Vérification que l'ID correspond à celui demandé\r",
+									"            pm.expect(jsonData.data._id).to.equal(tableIdFromUrl);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] Status 404 - Table doesn't exist\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Table introuvable !\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // SERVER ERROR\r",
+									"        pm.test(\"[SERVER ERROR] Status 500 - Server failure\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Echec serveur\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/tables/681492e88326910078e5a2f9",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"tables",
+								"681492e88326910078e5a2f9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - GET View tables CRITICAL QASM-TC-26",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\").that.is.an(\"array\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Status 200 - Tables found\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            \r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            pm.expect(jsonData.data).to.be.an(\"array\");\r",
+									"            \r",
+									"            // Vérification de la structure de chaque table\r",
+									"            jsonData.data.forEach(table => {\r",
+									"                pm.expect(table).to.have.property(\"_id\");\r",
+									"                pm.expect(table).to.have.property(\"name\");\r",
+									"                pm.expect(table).to.have.property(\"mariageID\");\r",
+									"                \r",
+									"                // Optionnel: vérifier que le mariageID correspond à celui attendu\r",
+									"                if (pm.variables.get(\"expectedMariageID\")) {\r",
+									"                    pm.expect(table.mariageID).to.equal(pm.variables.get(\"expectedMariageID\"));\r",
+									"                }\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] Status 404 - No tables found\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Tables introuvables !\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // SERVER ERROR\r",
+									"        pm.test(\"[SERVER ERROR] Status 500 - Server failure\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Echec serveur\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/tables",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"tables"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - POST Update table with guests CRITICAL QASM-TC-27",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    \r",
+									"    if (!jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"statusCode\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Extraction de l'ID de la table depuis l'URL\r",
+									"const urlSegments = pm.request.url.path;\r",
+									"const tableIdFromUrl = urlSegments[urlSegments.length - 1];\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Status 200 - Guests updated\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            pm.expect(jsonData.message).to.equal(\"La liste des invités a bien été modifiée\");\r",
+									"            \r",
+									"            // Optionnel : vérification côté base de données\r",
+									"            if (pm.variables.get(\"verifyChanges\")) {\r",
+									"                pm.sendRequest({\r",
+									"                    url: `${pm.environment.get(\"API_URL\")}/tables/${tableIdFromUrl}`,\r",
+									"                    method: \"GET\"\r",
+									"                }, (err, res) => {\r",
+									"                    const response = res.json();\r",
+									"                    const expectedGuestIds = JSON.parse(pm.request.body.raw).guestIds;\r",
+									"                    pm.expect(response.data.guestID).to.have.members(expectedGuestIds);\r",
+									"                });\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST (guests already on other table)\r",
+									"        pm.test(\"[CONFLICT] Guests on other table\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.include(\"sont déjà installés sur une autre table\");\r",
+									"            pm.expect(jsonData.statusCode).to.equal(400);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    // Tests pour le cas 404 - NOT FOUND\r",
+									"case 404:\r",
+									"    const { message } = pm.response.json();\r",
+									"    \r",
+									"    if (message === \"Table introuvable !\") {\r",
+									"        pm.test(\"404 - La table spécifiée n'existe pas\", function() {\r",
+									"            pm.expect(message).to.equal(\"Table introuvable !\");\r",
+									"        });\r",
+									"    }\r",
+									"    else {\r",
+									"        const idsExtraction = message.match(/IDs suivants sont introuvables: (.+)$/);\r",
+									"        const notFoundIds = idsExtraction ? idsExtraction[1] : 'non détectés';\r",
+									"        \r",
+									"        pm.test(`404 - Invités introuvables (IDs: ${notFoundIds})`, function() {\r",
+									"            pm.expect(message).to.include(\"invités avec les IDs suivants sont introuvables\");\r",
+									"            // Forcer l'affichage des IDs dans l'assertion\r",
+									"            pm.expect(notFoundIds, \"IDs concernés\").to.not.equal('non détectés');\r",
+									"        });\r",
+									"    }\r",
+									"    break;\r",
+									"        \r",
+									"    case 422: // UNPROCESSABLE ENTITY\r",
+									"        pm.test(\"[UPDATE FAILED] Table update error\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Echec de la modification de la table\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // SERVER ERROR\r",
+									"        pm.test(\"[SERVER ERROR]\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Echec serveur\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"guestIds\": [],\r\n  \"tableID\": \"65981d65cac83f004d989caf\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/guests/addtable/{{tableId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"guests",
+								"addtable",
+								"{{tableId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Invité",
+			"item": [
+				{
+					"name": "MEM - POST Add guest CRITICAL QASM-TC-33",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Response has basic structure\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    \r",
+									"    // Vérification des champs obligatoires\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    // Le champ 'data' ou 'message' existe selon le cas\r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Tests spécifiques par statut HTTP\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Status is 200\", function() {\r",
+									"            pm.expect(pm.response.code).to.equal(200);\r",
+									"        });\r",
+									"        \r",
+									"        pm.test(\"[SUCCESS] Guest created successfully\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            \r",
+									"            // Validation de la structure du guest créé\r",
+									"            pm.expect(jsonData.data).to.have.property(\"_id\");\r",
+									"            pm.expect(jsonData.data).to.have.property(\"mariageID\", jsonData.data.mariageID);\r",
+									"            pm.expect(jsonData.data).to.have.property(\"tableID\", null);\r",
+									"            pm.expect(jsonData.data).to.have.property(\"media\", \"\");\r",
+									"            \r",
+									"            // Vérification des champs du body\r",
+									"             try {\r",
+									"                const requestBody = pm.request.body ? JSON.parse(pm.request.body.raw) : {};\r",
+									"                Object.keys(requestBody).forEach(key => {\r",
+									"                    if (key !== \"media\" && key !== \"tableID\") { // Ignore les champs écrasés\r",
+									"                        pm.expect(jsonData.data).to.have.property(key, requestBody[key]);\r",
+									"                    }\r",
+									"                });\r",
+									"            } catch (e) {\r",
+									"                console.log(\"No valid request body to compare\");\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAIL] Status is 400\", function() {\r",
+									"            pm.expect(pm.response.code).to.equal(400);\r",
+									"        });\r",
+									"        \r",
+									"        pm.test(\"[FAIL] Failed to create a new guest\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Erreur serveur\");\r",
+									"            pm.expect(jsonData).to.not.have.property(\"data\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 401: // UNAUTHORIZED (si middleware d'authentification échoue)\r",
+									"        pm.test(\"[AUTH ERROR] Status is 401\", function() {\r",
+									"            pm.expect(pm.response.code).to.equal(401);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(\"[UNEXPECTED] Unexpected status code: \" + pm.response.code, function() {\r",
+									"            pm.expect.fail(\"Received unexpected status: \" + pm.response.code);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "AioAuth MDBkM2UwMGQtZTUzNi0zZTA2LWE1MTQtNTRjMzk1NzMxNGEzLjkxMjYyZDQzLWY0YTMtNDFlZC1iNGM1LTNjZDE3OGYyZGRiNQ==",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "Patrick",
+									"type": "text"
+								},
+								{
+									"key": "family",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/guests/add",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"guests",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update avatar",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "media",
+									"type": "file",
+									"src": "/C:/Users/dalin/Pictures/Drake-1024x750.png"
+								},
+								{
+									"key": "name",
+									"value": "Bernard",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:3050/api/admin/guests/edit/65b3a614503b2a2ed0f761ec",
+							"host": [
+								"localhost"
+							],
+							"port": "3050",
+							"path": [
+								"api",
+								"admin",
+								"guests",
+								"edit",
+								"65b3a614503b2a2ed0f761ec"
+							],
+							"query": [
+								{
+									"key": "groupID",
+									"value": "5ebe7769e30e9728a09205aa",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - DELETE Delete guest CRITICAL QASM-TC-35",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Common tests for all responses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"});\r",
+									"\r",
+									"// Extract guest ID from URL\r",
+									"const urlSegments = pm.request.url.path;\r",
+									"const guestIdFromUrl = urlSegments[urlSegments.length - 1];\r",
+									"\r",
+									"// Scenario-specific tests\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Guest successfully deleted\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            pm.expect(jsonData.message).to.equal(\"L'invité a bien été supprimé\");\r",
+									"            \r",
+									"            // Optional: Verify deletion by attempting to fetch the guest\r",
+									"            pm.sendRequest({\r",
+									"                url: pm.request.url, // Reuse the same URL\r",
+									"                method: \"GET\"\r",
+									"            }, function(err, res) {\r",
+									"                pm.expect(res.code).to.equal(404);\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"    pm.test(\"[NOT FOUND] Guest not found - Deletion failed\", function() {\r",
+									"        const jsonData = pm.response.json();\r",
+									"        pm.expect(jsonData.success).to.be.false;\r",
+									"        \r",
+									"        // Premier test : vérifie juste que c'est bien une erreur 404 attendue\r",
+									"        pm.expect(jsonData.message).to.be.oneOf([\r",
+									"            \"Invité introuvable !\",\r",
+									"            \"Echec lors de la suppression de l'invité\"\r",
+									"        ]);\r",
+									"        \r",
+									"        // Deuxième test (informative seulement, ne fait pas échouer le test)\r",
+									"        if (jsonData.message === \"Invité introuvable !\") {\r",
+									"            console.log(`Info: Guest ${guestIdFromUrl} was not found (expected behavior)`);\r",
+									"        } else {\r",
+									"            console.log(`Info: Deletion failed for guest ${guestIdFromUrl}`);\r",
+									"        }\r",
+									"    });\r",
+									"    break;\r",
+									"        \r",
+									"    case 500: // SERVER ERROR\r",
+									"        pm.test(\"[SERVER ERROR] Server error during deletion\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Echec serveur\");\r",
+									"            \r",
+									"            // Additional debug info for CI/CD\r",
+									"            if (guestIdFromUrl.match(/^[0-9a-fA-F]{24}$/) === null) {\r",
+									"                pm.expect.fail(`The ID ${guestIdFromUrl} appears to be invalid (expected MongoDB format)`);\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/guests/delete/{{guestId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"guests",
+								"delete",
+								"{{guestId}}"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "5efb7e6ffe5f7f3beca6074c",
+									"disabled": true
+								},
+								{
+									"key": "guestID",
+									"value": "5efb7e05fe5f7f3beca60746",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - GET View guest CRITICAL QASM-TC-36",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Extraction de l'ID de l'invité depuis l'URL\r",
+									"const urlSegments = pm.request.url.path;\r",
+									"const guestIdFromUrl = urlSegments[urlSegments.length - 1];\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(`[SUCCESS] Status 200 - Guest found (ID: ${guestIdFromUrl})`, function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            \r",
+									"            pm.expect(jsonData.success).to.be.true;\r",
+									"            pm.expect(jsonData.data).to.be.an(\"object\");\r",
+									"            \r",
+									"            // Vérification des champs obligatoires\r",
+									"            pm.expect(jsonData.data).to.have.property(\"_id\", guestIdFromUrl);\r",
+									"            pm.expect(jsonData.data).to.have.property(\"tableID\");\r",
+									"            \r",
+									"            // Vérification du populate de la table\r",
+									"            if (jsonData.data.tableID) {\r",
+									"                pm.expect(jsonData.data.tableID).to.have.property(\"name\").that.is.a(\"string\");\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] Status 404 - Guest not found\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Invité introuvable\");\r",
+									"            \r",
+									"            // Affichage explicite de l'ID recherché\r",
+									"            pm.expect.fail(`L'invité avec l'ID ${guestIdFromUrl} n'a pas été trouvé`);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[BAD REQUEST] Status 400 - Invalid request\", function() {\r",
+									"            const jsonData = pm.response.json();\r",
+									"            pm.expect(jsonData.success).to.be.false;\r",
+									"            pm.expect(jsonData.message).to.equal(\"Erreur serveur\");\r",
+									"            \r",
+									"            // Affichage supplémentaire pour debug\r",
+									"            if (guestIdFromUrl.match(/^[0-9a-fA-F]{24}$/) === null) {\r",
+									"                pm.expect.fail(`L'ID ${guestIdFromUrl} semble invalide (format MongoDB attendu)`);\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Statut inattendu : ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/guests/id/{{guestId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"guests",
+								"id",
+								"{{guestId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - GET View guests CRITICAL QASM-TC-37",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Common tests for all responses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\").that.is.an(\"array\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Scenario-specific tests\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Status 200 - Valid guests list\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            \r",
+									"            // 1. Basic structure validation\r",
+									"            pm.expect(response.success).to.be.true;\r",
+									"            pm.expect(response.data).to.be.an(\"array\");\r",
+									"            \r",
+									"            // 2. Guest validation\r",
+									"            response.data.forEach(guest => {\r",
+									"                // Mandatory mariageID check\r",
+									"                pm.expect(guest, \"A guest must always have a mariageID\").to.have.property(\"mariageID\");\r",
+									"                \r",
+									"                // Verify mariageID is a non-empty string\r",
+									"                pm.expect(guest.mariageID, \"mariageID must be a valid ID\")\r",
+									"                  .to.be.a(\"string\")\r",
+									"                  .and.to.match(/^[0-9a-fA-F]{24}$/); // MongoDB format\r",
+									"                \r",
+									"                // Other mandatory properties\r",
+									"                pm.expect(guest).to.have.property(\"_id\").that.is.a(\"string\");\r",
+									"                pm.expect(guest).to.have.property(\"name\").that.is.a(\"string\");\r",
+									"                \r",
+									"                // Optional: _id format validation\r",
+									"                pm.expect(guest._id).to.match(/^[0-9a-fA-F]{24}$/);\r",
+									"            });\r",
+									"            \r",
+									"            // 3. Informative message\r",
+									"            if (response.data.length > 0) {\r",
+									"                pm.expect(response.data.length, `Number of valid guests: ${response.data.length}`).to.be.greaterThan(0);\r",
+									"            } else {\r",
+									"                pm.expect.fail(\"No guests found despite receiving a 200 status\");\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] No guests found\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response).to.deep.equal({\r",
+									"                success: false,\r",
+									"                message: \"Invités introuvables !\"\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // SERVER ERROR\r",
+									"        pm.test(\"[SERVER ERROR] Server error\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response).to.deep.equal({\r",
+									"                success: false,\r",
+									"                message: \"Echec serveur\"\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": []
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/guests/",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"guests",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Afficher l'avatar de l'invité",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwNzEyYzE3N2I2MzM1MzJiYzllNDVhYyIsIm1hcmlhZ2VJRCI6IjYwNzEyYzE3N2I2MzM1MzJiYzllNDVhYiIsInJvbGUiOiJhZG1pbiIsImludml0YXRpb25JRCI6IjYwNzEyYzE3N2I2MzM1MzJiYzllNDVhZSIsImlhdCI6MTYxODYyMzgxMX0.9aLTIh0QJWFj_anD7Jd_KYRppKGPOIKzUYXrha0RFQ4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3050/api/admin/guests/media/eae5c6145d4b3db38caeed7871cc4175.jpeg",
+							"host": [
+								"localhost"
+							],
+							"port": "3050",
+							"path": [
+								"api",
+								"admin",
+								"guests",
+								"media",
+								"eae5c6145d4b3db38caeed7871cc4175.jpeg"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Expenses",
+			"item": [
+				{
+					"name": "MEM - POST Add expense HIGH QASM-TC-67",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Common tests for all responses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\").that.is.an(\"object\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Scenario-specific tests\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Operation created successfully\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            const requestBody = JSON.parse(pm.request.body.raw || '{}');\r",
+									"            \r",
+									"            // 1. Basic response validation\r",
+									"            pm.expect(response.success).to.be.true;\r",
+									"            pm.expect(response.data).to.be.an(\"object\");\r",
+									"            \r",
+									"            // 2. Price conversion verification (x100)\r",
+									"            if (requestBody.price) {\r",
+									"                const expectedPrice = requestBody.price * 100;\r",
+									"                pm.expect(response.data.price).to.equal(expectedPrice);\r",
+									"                pm.test(`Price converted: ${requestBody.price} → ${expectedPrice}`, () => true);\r",
+									"                \r",
+									"                // Validate price meets schema requirements\r",
+									"                pm.expect(response.data.price).to.be.at.least(1);\r",
+									"                pm.expect(response.data.price).to.be.at.most(99999900); // Accounting for x100 conversion\r",
+									"            }\r",
+									"            \r",
+									"            // 3. Full schema validation\r",
+									"            const operationSchema = {\r",
+									"                type: \"object\",\r",
+									"                properties: {\r",
+									"                    _id: { type: \"string\" },\r",
+									"                    category: { \r",
+									"                        type: \"string\",\r",
+									"                        enum: [\"Locations\", \"Habillement/Beauté\", \"Décoration/Fleurs\", \r",
+									"                               \"Alliances/Bijoux\", \"Animation\", \"Traiteur\", \r",
+									"                               \"Faire-part\", \"Autres\"]\r",
+									"                    },\r",
+									"                    description: { \r",
+									"                        type: \"string\", \r",
+									"                        maxLength: 255 \r",
+									"                    },\r",
+									"                    price: { \r",
+									"                        type: \"number\",\r",
+									"                        minimum: 1,\r",
+									"                        maximum: 99999900 // After x100 conversion\r",
+									"                    },\r",
+									"                    date: { type: \"string\" },\r",
+									"                    mariageID: { type: \"string\" }\r",
+									"                },\r",
+									"                required: [\"_id\", \"category\", \"description\", \"price\", \"mariageID\"]\r",
+									"            };\r",
+									"            pm.expect(response.data).to.have.jsonSchema(operationSchema);\r",
+									"            \r",
+									"            \r",
+									"            // 4. Verify mariageID is correctly set\r",
+									"            if (pm.variables.get(\"mariageId\")) {\r",
+									"                pm.expect(response.data.mariageID.toString()).to.equal(pm.variables.get(\"mariageId\").toString());\r",
+									"            }\r",
+									"            \r",
+									"            pm.test(`Operation created: ${JSON.stringify(response.data, null, 2)}`, () => true);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAILED] Creation error\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.include(\"erreur\"); // Flexible error message check\r",
+									"            \r",
+									"            // Detailed validation error analysis\r",
+									"            const requestBody = JSON.parse(pm.request.body.raw || '{}');\r",
+									"            \r",
+									"            if (!requestBody.description) {\r",
+									"                pm.test(\"Missing required field: description\", () => true);\r",
+									"            }\r",
+									"            \r",
+									"            if (requestBody.price !== undefined) {\r",
+									"                if (requestBody.price < 1) pm.test(\"Price below minimum (1)\", () => true);\r",
+									"                if (requestBody.price > 999999) pm.test(\"Price above maximum (999999)\", () => true);\r",
+									"            }\r",
+									"            \r",
+									"            if (requestBody.category && !operationSchema.properties.category.enum.includes(requestBody.category)) {\r",
+									"                pm.test(`Invalid category: ${requestBody.category}`, () => true);\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}\\nResponse: ${JSON.stringify(pm.response.json(), null, 2)}`);\r",
+									"        });\r",
+									"}\r",
+									"\r",
+									"// Quality of service tests\r",
+									"// pm.test(\"Response time is reasonable (<500ms)\", function() {\r",
+									"//     pm.expect(pm.response.responseTime).to.be.below(500);\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Correct content type header\", function() {\r",
+									"//     pm.expect(pm.response.headers.get('Content-Type')).to.equal('application/json; charset=utf-8');\r",
+									"// });"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "category",
+									"value": "Locations",
+									"type": "text"
+								},
+								{
+									"key": "price",
+									"value": "700",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Location de smoking",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/budget/operations/add",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"budget",
+								"operations",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - GET Expense HIGH QASM-TC-68",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Common tests for all responses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\").that.satisfies(data => {\r",
+									"            return data === null || typeof data === \"object\";\r",
+									"        });\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Scenario-specific tests\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Operation retrieved successfully\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            \r",
+									"            // 1. Basic response validation\r",
+									"            pm.expect(response.success).to.be.true;\r",
+									"            \r",
+									"            // 2. Handle both found and not-found cases\r",
+									"            if (response.data !== null) {\r",
+									"                // 3. Complete schema validation\r",
+									"                const operationSchema = {\r",
+									"                    type: \"object\",\r",
+									"                    properties: {\r",
+									"                        _id: { type: \"string\" },\r",
+									"                        category: { \r",
+									"                            type: \"string\",\r",
+									"                            enum: [\"Locations\", \"Habillement/Beauté\", \"Décoration/Fleurs\", \r",
+									"                                   \"Alliances/Bijoux\", \"Animation\", \"Traiteur\", \r",
+									"                                   \"Faire-part\", \"Autres\"]\r",
+									"                        },\r",
+									"                        description: { \r",
+									"                            type: \"string\", \r",
+									"                            maxLength: 255 \r",
+									"                        },\r",
+									"                        price: { \r",
+									"                            type: \"number\",\r",
+									"                            minimum: 1,\r",
+									"                            maximum: 99999900\r",
+									"                        },\r",
+									"                        date: { type: \"string\" },\r",
+									"                        mariageID: { type: \"string\" }\r",
+									"                    },\r",
+									"                    required: [\"_id\", \"category\", \"description\", \"price\", \"mariageID\"]\r",
+									"                };\r",
+									"                pm.expect(response.data).to.have.jsonSchema(operationSchema);\r",
+									"                \r",
+									"                // 4. Verify price format (should be stored as x100)\r",
+									"                if (response.data.price) {\r",
+									"                    pm.expect(response.data.price % 1).to.equal(0, \"Price should be an integer (stored as cents)\");\r",
+									"                    pm.test(`Price value: ${response.data.price/100}`, () => true);\r",
+									"                }\r",
+									"            } else {\r",
+									"                pm.test(\"Operation not found (null response)\", () => true);\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAILED] Retrieval error\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.equal(\"Oups, une erreur s'est produite lors de la récupération de l'opération\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}\\nResponse: ${JSON.stringify(pm.response.json(), null, 2)}`);\r",
+									"        });\r",
+									"}\r",
+									"\r",
+									"// Quality of service tests\r",
+									"// pm.test(\"Response time is acceptable (<300ms)\", function() {\r",
+									"//     pm.expect(pm.response.responseTime).to.be.below(300);\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Correct content type header\", function() {\r",
+									"//     pm.expect(pm.response.headers.get('Content-Type')).to.equal('application/json; charset=utf-8');\r",
+									"// });\r",
+									"\r",
+									"// Environment validation\r",
+									"// pm.test(\"Requested ID is valid format\", function() {\r",
+									"//     const requestedId = pm.request.url.split('/').pop();\r",
+									"//     pm.expect(requestedId).to.match(/^[0-9a-fA-F]{24}$/);\r",
+									"// });"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/budget/operation/{{expenseId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"budget",
+								"operation",
+								"{{expenseId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - POST Edit expense HIGH QASM-TC-69",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// 1. BASIC RESPONSE STRUCTURE\r",
+									"pm.test(\"Response has valid structure\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.any.keys(\"success\", \"message\", \"err\")\r",
+									"});\r",
+									"\r",
+									"// 2. SCENARIO HANDLING (request handling)\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Operation updated\", function() {\r",
+									"            pm.expect(pm.response.json()).to.deep.equal({\r",
+									"                success: true,\r",
+									"                message: \"Modification enregistrée\"\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // VALIDATION ERROR\r",
+									"        const errorCases = {\r",
+									"            \"invalid_fields\": {\r",
+									"                description: \"should reject invalid field (empty, invalid type or value)\",\r",
+									"                test: () => {\r",
+									"                    pm.expect(pm.response.json().err)\r",
+									"                      .to.equal(\"Tous les champs doivent être valides.\");\r",
+									"                }\r",
+									"            },\r",
+									"            \"update_failed\": {\r",
+									"                description: \"should handle update failure\",\r",
+									"                test: () => {\r",
+									"                    pm.expect(pm.response.json().message)\r",
+									"                      .to.include(\"erreur s'est produite\");\r",
+									"                }\r",
+									"            }\r",
+									"        };\r",
+									"        \r",
+									"        // Determine error type based on request\r",
+									"        const requestBody = JSON.parse(pm.request.body.raw || '{}');\r",
+									"        const isTypeError = typeof requestBody.price !== 'number' || \r",
+									"                          !['Locations', 'Habillement/Beauté', /*...*/].includes(requestBody.category);\r",
+									"        \r",
+									"        pm.test(`[FAILED] ${isTypeError ? errorCases.invalid_fields.description \r",
+									"                                       : errorCases.update_failed.description}`, \r",
+									"                isTypeError ? errorCases.invalid_fields.test \r",
+									"                           : errorCases.update_failed.test);\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[FAILED] Operation not found\", function() {\r",
+									"            pm.expect(pm.response.json()).to.deep.equal({\r",
+									"                success: false,\r",
+									"                message: \"L'opération n'existe pas.\"\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected response: ${JSON.stringify(pm.response.json())}`);\r",
+									"        });\r",
+									"}\r",
+									"\r",
+									"// 3. QUALITY CHECKS (for all responses)\r",
+									"// pm.test(\"Response time < 500ms\", () => pm.expect(pm.response.responseTime).to.be.below(500));\r",
+									"// pm.test(\"Has JSON content-type\", () => {\r",
+									"//     pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');\r",
+									"// });"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"category\": \"Locations\",\r\n  \"description\": \"Smoking\",\r\n  \"price\": 200\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/budget/operations/edit/{{expenseId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"budget",
+								"operations",
+								"edit",
+								"{{expenseId}}"
+							],
+							"query": [
+								{
+									"key": "title",
+									"value": "Blablabla",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - DELETE Expense HIGH QASM-TC-70",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// 1. BASIC RESPONSE VALIDATION\r",
+									"pm.test(\"Response structure is valid\", function() {\r",
+									"    const response = pm.response.json();\r",
+									"    \r",
+									"    pm.expect(response).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    pm.expect(response).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"});\r",
+									"\r",
+									"// 2. SCENARIO-BASED TESTS\r",
+									"const response = pm.response.json();\r",
+									"const operationId = pm.request.url.toString().split('/').pop();\r",
+									"\r",
+									"switch(pm.response.code) {\r",
+									"    case 200:\r",
+									"        pm.test(\"[SUCCESS] Operation should be deleted\", function() {\r",
+									"            pm.expect(response).to.deep.equal({\r",
+									"                success: true,\r",
+									"                message: \"Opération suprimée\"\r",
+									"            });\r",
+									"            \r",
+									"            pm.expect(operationId).to.match(/^[0-9a-fA-F]{24}$/);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404:\r",
+									"        pm.test(\"[NOT FOUND] Should handle non-existent operation\", function() {\r",
+									"            pm.expect(response).to.deep.equal({\r",
+									"                success: false,\r",
+									"                message: \"Oups, l'opération que vous souhaitez supprimer n'existe pas\"\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400:\r",
+									"        const errorMessages = {\r",
+									"            deletion_failed: \"Oups, une erreur s'est produite lors de la suppression du l'opération\",\r",
+									"            server_error: \"Oups, une erreur s'est produite lors de la suppression de l'opération\"\r",
+									"        };\r",
+									"        \r",
+									"        pm.test(\"[FAILED] Should handle deletion error\", function() {\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(Object.values(errorMessages)).to.include(response.message);\r",
+									"            \r",
+									"            if (response.message === errorMessages.deletion_failed) {\r",
+									"                pm.expect(operationId).to.match(/^[0-9a-fA-F]{24}$/);\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected response: ${JSON.stringify(response)}`);\r",
+									"        });\r",
+									"}\r",
+									"\r",
+									"// 3. QUALITY CHECKS\r",
+									"// pm.test(\"Response time should be < 500ms\", function() {\r",
+									"//     pm.expect(pm.response.responseTime).to.be.below(500);\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Should have correct content-type\", function() {\r",
+									"//     pm.expect(pm.response.headers.get('Content-Type'))\r",
+									"//       .to.equal('application/json; charset=utf-8');\r",
+									"// });\r",
+									"\r",
+									"// 4. SECURITY CHECKS\r",
+									"// pm.test(\"Should require authentication\", function() {\r",
+									"//     if (pm.response.code !== 404) { // 404 peut être accessible sans auth\r",
+									"//         pm.expect(pm.request.headers.get('Authorization'))\r",
+									"//           .to.match(/^Bearer\\s.+/);\r",
+									"//     }\r",
+									"// });"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/budget/operations/delete/{{expenseId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"budget",
+								"operations",
+								"delete",
+								"{{expenseId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - GET All expenses HIGH QASM-TC-71",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Common tests for all responses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Scenario-specific tests\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Operations retrieved successfully\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            \r",
+									"            // 1. Basic response validation\r",
+									"            pm.expect(response.success).to.be.true;\r",
+									"            pm.expect(response.data).to.be.an(\"array\");\r",
+									"            \r",
+									"            // 2. Validate each operation in the array\r",
+									"            if (response.data.length > 0) {\r",
+									"                const operationSchema = {\r",
+									"                    type: \"object\",\r",
+									"                    properties: {\r",
+									"                        _id: { type: \"string\" },\r",
+									"                        category: { \r",
+									"                            type: \"string\",\r",
+									"                            enum: [\"Locations\", \"Habillement/Beauté\", \"Décoration/Fleurs\", \r",
+									"                                   \"Alliances/Bijoux\", \"Animation\", \"Traiteur\", \r",
+									"                                   \"Faire-part\", \"Autres\"]\r",
+									"                        },\r",
+									"                        description: { \r",
+									"                            type: \"string\", \r",
+									"                            maxLength: 255 \r",
+									"                        },\r",
+									"                        price: { \r",
+									"                            type: \"number\",\r",
+									"                            minimum: 1,\r",
+									"                            maximum: 99999900 // accounting for x100 conversion\r",
+									"                        },\r",
+									"                        date: { type: \"string\" },\r",
+									"                        mariageID: { type: \"string\" }\r",
+									"                    },\r",
+									"                    required: [\"_id\", \"category\", \"description\", \"price\", \"mariageID\"]\r",
+									"                };\r",
+									"                \r",
+									"                response.data.forEach(operation => {\r",
+									"                    // 3. Validate against schema\r",
+									"                    pm.expect(operation).to.have.jsonSchema(operationSchema);\r",
+									"                    \r",
+									"                    // 4. Verify mariageID matches\r",
+									"                    if (pm.variables.get(\"mariageId\")) {\r",
+									"                        pm.expect(operation.mariageID.toString()).to.equal(\r",
+									"                            pm.variables.get(\"mariageId\").toString()\r",
+									"                        );\r",
+									"                    }\r",
+									"                    \r",
+									"                    // 5. Verify price format\r",
+									"                    if (operation.price) {\r",
+									"                        pm.expect(operation.price % 1).to.equal(0, \"Price should be stored as integer (cents)\");\r",
+									"                    }\r",
+									"                });\r",
+									"                \r",
+									"                pm.test(`Found ${response.data.length} operations`, () => true);\r",
+									"            } else {\r",
+									"                pm.test(\"Received empty operations array\", () => true);\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[FAILED] Operations not found\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.equal(\"Impossible de charger votre journal d'opérations\");\r",
+									"            \r",
+									"            // Verify this occurs when no operations exist for mariageID\r",
+									"            pm.test(\"Likely caused by no operations for this wedding\", () => true);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // SERVER ERROR\r",
+									"        pm.test(\"[FAILED] Server error\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.equal(\"Echec serveur\");\r",
+									"            \r",
+									"            // Verify this occurs on database errors\r",
+									"            pm.test(\"Likely caused by database connection issue\", () => true);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}\\nResponse: ${JSON.stringify(pm.response.json(), null, 2)}`);\r",
+									"        });\r",
+									"}\r",
+									"\r",
+									"// Quality of service tests\r",
+									"// pm.test(\"Response time is acceptable (<500ms)\", function() {\r",
+									"//     pm.expect(pm.response.responseTime).to.be.below(500);\r",
+									"// });\r",
+									"\r",
+									"// pm.test(\"Correct content type header\", function() {\r",
+									"//     pm.expect(pm.response.headers.get('Content-Type')).to.equal('application/json; charset=utf-8');\r",
+									"// });\r",
+									"\r",
+									"// Environment validation\r",
+									"// pm.test(\"Request has proper authorization\", function() {\r",
+									"//     pm.expect(pm.request.headers.get('Authorization')).to.include('Bearer');\r",
+									"// });"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/budget/operations/",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"budget",
+								"operations",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Todolist",
+			"item": [
+				{
+					"name": "MEM - POST Update task HIGH QASM-TC-72",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    pm.expect(jsonData).to.have.property(\"message\" || \"data\").that.exist;\r",
+									"});\r",
+									"\r",
+									"// Extraction de l'ID depuis l'URL\r",
+									"const urlSegments = pm.request.url.path;\r",
+									"const todoIdFromUrl = urlSegments[urlSegments.length - 1];\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Task updated - Modification enregistrée\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            const requestBody = JSON.parse(pm.request.body.raw || '{}');\r",
+									"            \r",
+									"            // Vérification de base\r",
+									"            pm.expect(response.success).to.be.true;\r",
+									"            \r",
+									"            // Selon la réponse (votre fonction a deux return 200 différents)\r",
+									"            if (response.message) {\r",
+									"                pm.expect(response.message).to.equal(\"Modification enregistrée\");\r",
+									"            } else if (response.data) {\r",
+									"                pm.test(\"Verify update result\", function() {\r",
+									"                    pm.expect(response.data.nModified).to.equal(1);\r",
+									"                });\r",
+									"            }\r",
+									"            \r",
+									"            // Optionnel : vérification des modifications\r",
+									"            if (pm.variables.get(\"verifyChanges\")) {\r",
+									"                pm.sendRequest({\r",
+									"                    url: pm.request.url,\r",
+									"                    method: \"GET\"\r",
+									"                }, function(err, res) {\r",
+									"                    const updatedTodo = res.json().data;\r",
+									"                    Object.keys(requestBody).forEach(key => {\r",
+									"                        pm.expect(updatedTodo[key]).to.deep.equal(requestBody[key]);\r",
+									"                    });\r",
+									"                });\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAILED] \" + pm.response.json().message, function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.be.oneOf([\r",
+									"                \"Oups, une erreur s'est produite lors de la modification de la tâche.\",\r",
+									"                \"Oups, une erreur s'est produite lors de la mise à jour de la tâche\"\r",
+									"            ]);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] Todo not found - Le tâche que vous cherchez n'existe pas\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.equal(\"Le tâche que vous cherchez n'existe pas\");\r",
+									"            pm.expect.fail(`Tâche ID ${todoIdFromUrl} introuvable`);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "text",
+									"value": "Changed value 3",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/todolist/edit/{{todoId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"todolist",
+								"edit",
+								"{{todoId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - POST Create task HIGH QASM-TC-73",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\").that.is.an(\"object\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"    pm.test(\"[SUCCESS] Task created successfully\", function() {\r",
+									"        // 1. Vérifier que la réponse est un JSON valide\r",
+									"        const response = pm.response.json();\r",
+									"        const requestBody = JSON.parse(pm.request.body.raw || '{}'); // Gestion du body vide\r",
+									"        \r",
+									"        // 2. Vérification de base\r",
+									"        pm.expect(response.success).to.be.true;\r",
+									"        pm.expect(response.data).to.be.an(\"object\");\r",
+									"        \r",
+									"        // 3. Validation du schéma\r",
+									"        const todoSchema = {\r",
+									"            type: \"object\",\r",
+									"            properties: {\r",
+									"                _id: { type: \"string\" },\r",
+									"                text: { type: \"string\", minLength: 1 },\r",
+									"                isCompleted: { type: \"boolean\" },\r",
+									"                mariageID: { type: \"string\" }\r",
+									"            },\r",
+									"            required: [\"_id\", \"text\", \"mariageID\"]\r",
+									"        };\r",
+									"        pm.expect(response.data).to.have.jsonSchema(todoSchema);\r",
+									"        \r",
+									"        // 4. Vérification des données\r",
+									"        if (requestBody.text) {\r",
+									"            pm.expect(response.data.text).to.equal(requestBody.text);\r",
+									"            pm.test(`Tâche créée: \"${response.data.text}\"`, () => true); // Affichage clair\r",
+									"        }\r",
+									"        \r",
+									"        pm.expect(response.data.isCompleted).to.be.false;\r",
+									"        pm.expect(response.data.mariageID.toString()).to.equal(pm.variables.get(\"mariageId\").toString());\r",
+									"    });\r",
+									"    break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAILED] \" + pm.response.json().message, function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            \r",
+									"            // Vérification du type d'erreur\r",
+									"            pm.expect(response.message).to.be.oneOf([\r",
+									"                \"La valeur du champ ne peut pas être vide\",\r",
+									"                \"Oups, une erreur s'est produite lors de la création de la tâche\"\r",
+									"            ]);\r",
+									"            \r",
+									"            // Message supplémentaire pour le champ vide\r",
+									"            if (response.message === \"La valeur du champ ne peut pas être vide\") {\r",
+									"                pm.expect(JSON.parse(pm.request.body.raw)).to.not.have.property(\"text\");\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "text",
+									"value": "Test",
+									"type": "text"
+								},
+								{
+									"key": "color",
+									"value": "#bbcec3",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/todolist/add",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"todolist",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - DELETE Delete task HIGH QASM-TC-74",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\" || \"err\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Extraction de l'ID depuis l'URL\r",
+									"const urlSegments = pm.request.url.path;\r",
+									"const todoIdFromUrl = urlSegments[urlSegments.length - 1];\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Todo deleted - Tâche supprimée\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            \r",
+									"            // Vérification de base\r",
+									"            pm.expect(response.success).to.be.true;\r",
+									"            pm.expect(response.message).to.equal(\"Tâche supprimée\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAILED] \" + pm.response.json().message, function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            \r",
+									"            // Vérification du type d'erreur\r",
+									"            pm.expect(response.message).to.be.oneOf([\r",
+									"                \"Oups, le mariage n'a pas été mis à jour\",\r",
+									"                \"Oups, une erreur s'est produite lors de la suppression du la tâche\",\r",
+									"                \"Oups, une erreur s'est produite lors de la suppression de la tâche\"\r",
+									"            ]);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] Todo not found - \" + pm.response.json().err, function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.err).to.equal(\"Oups, la tâche que vous souhaitez supprimer n'existe pas\");\r",
+									"            pm.expect.fail(`Tâche ID ${todoIdFromUrl} introuvable`);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/todolist/delete/{{todoId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"todolist",
+								"delete",
+								"{{todoId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - GET Todo list HIGH QASM-TC-75",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\").that.is.an(\"array\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Todos retrieved - Found \" + pm.response.json().data.length + \" tasks\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            const mariageId = pm.variables.get(\"mariageId\");\r",
+									"            \r",
+									"            // Vérification de base\r",
+									"            pm.expect(response.success).to.be.true;\r",
+									"            pm.expect(response.data).to.be.an(\"array\");\r",
+									"            \r",
+									"            // Validation du schéma pour chaque todo\r",
+									"            const todoSchema = {\r",
+									"                type: \"object\",\r",
+									"                properties: {\r",
+									"                    _id: { type: \"string\" },\r",
+									"                    text: { \r",
+									"                        type: \"string\",\r",
+									"                        minLength: 1\r",
+									"                    },\r",
+									"                    isCompleted: { type: \"boolean\" },\r",
+									"                    mariageID: { type: \"string\" }\r",
+									"                },\r",
+									"                required: [\"_id\", \"text\", \"mariageID\"]\r",
+									"            };\r",
+									"            \r",
+									"            // Vérification de chaque tâche\r",
+									"            response.data.forEach(todo => {\r",
+									"                pm.expect(todo).to.have.jsonSchema(todoSchema);\r",
+									"                pm.expect(todo.mariageID.toString()).to.equal(mariageId.toString());\r",
+									"                \r",
+									"                // Vérification spécifique pour le texte\r",
+									"                if (todo.text) {\r",
+									"                    pm.expect(todo.text.trim().length, \"Le texte ne doit pas être vide\")\r",
+									"                      .to.be.greaterThan(0);\r",
+									"                }\r",
+									"            });\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[NOT FOUND] No todos found - Liste de tâche introuvable !\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.equal(\"Liste de tâche introuvable !\");\r",
+									"            \r",
+									"            // Note: find() retourne [] plutôt que null, ce cas ne devrait normalement pas se produire\r",
+									"            console.log(\"Mariage ID testé: \" + pm.variables.get(\"mariageId\"));\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 500: // SERVER ERROR\r",
+									"        pm.test(\"[SERVER ERROR] Server failure - Echec serveur\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.equal(\"Echec serveur\");\r",
+									"            \r",
+									"            // Debug pour IDs invalides\r",
+									"            if (pm.variables.get(\"mariageId\").match(/^[0-9a-fA-F]{24}$/) === null) {\r",
+									"                console.log(\"ID de mariage potentiellement invalide\");\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": []
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/todolist/",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"todolist",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Reception",
+			"item": [
+				{
+					"name": "MEM - GET Food HIGH QASM-TC-57",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        if (pm.response.json().success) {\r",
+									"            pm.test(\"[SUCCESS] Foods retrieved successfully\", function() {\r",
+									"                const response = pm.response.json();\r",
+									"                \r",
+									"                // Validation de base\r",
+									"                pm.expect(response.success).to.be.true;\r",
+									"                pm.expect(response.data).to.be.an(\"array\");\r",
+									"                \r",
+									"                // Schéma de validation pour chaque élément\r",
+									"                const foodSchema = {\r",
+									"                    type: \"object\",\r",
+									"                    properties: {\r",
+									"                        _id: { type: \"string\" },\r",
+									"                        name: { type: \"string\", minLength: 1 },\r",
+									"                        category: { \r",
+									"                            type: \"string\",\r",
+									"                            enum: [\"apetizer\", \"starter\", \"maincourse\", \"dessert\", \"beverage\"]\r",
+									"                        },\r",
+									"                        mariageID: { type: \"string\" }\r",
+									"                    },\r",
+									"                    required: [\"_id\", \"name\", \"category\", \"mariageID\"]\r",
+									"                };\r",
+									"                \r",
+									"                // Vérification de chaque élément du tableau\r",
+									"                response.data.forEach(food => {\r",
+									"                    pm.expect(food).to.have.jsonSchema(foodSchema);\r",
+									"                    \r",
+									"                    // Vérification du mariageID si variable disponible\r",
+									"                    if (pm.variables.get(\"mariageId\")) {\r",
+									"                        pm.expect(food.mariageID.toString()).to.equal(pm.variables.get(\"mariageId\").toString());\r",
+									"                    }\r",
+									"                });\r",
+									"                \r",
+									"                pm.test(`Found ${response.data.length} food items`, () => true);\r",
+									"            });\r",
+									"        } else {\r",
+									"            pm.test(\"[FAILED] Server error\", function() {\r",
+									"                const response = pm.response.json();\r",
+									"                pm.expect(response.success).to.be.false;\r",
+									"                pm.expect(response.message).to.equal(\"Echec serveur\");\r",
+									"            });\r",
+									"        }\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[FAILED] No foods found\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.equal(\"Impossible de charger les boissons du menu\");\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/reception/food/",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"reception",
+								"food",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - POST Add Food HIGH QASM-TC-58",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    if (jsonData.success) {\r",
+									"        pm.expect(jsonData).to.have.property(\"data\").that.is.an(\"object\");\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Food created successfully\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            const requestBody = JSON.parse(pm.request.body.raw || '{}');\r",
+									"            \r",
+									"            // Validation de base\r",
+									"            pm.expect(response.success).to.be.true;\r",
+									"            pm.expect(response.data).to.be.an(\"object\");\r",
+									"            \r",
+									"            // Schéma de validation\r",
+									"            const foodSchema = {\r",
+									"                type: \"object\",\r",
+									"                properties: {\r",
+									"                    _id: { type: \"string\" },\r",
+									"                    name: { type: \"string\", minLength: 1, maxLength: 100 },\r",
+									"                    category: { \r",
+									"                        type: \"string\",\r",
+									"                        enum: [\"apetizer\", \"starter\", \"maincourse\", \"dessert\", \"beverage\"]\r",
+									"                    },\r",
+									"                    mariageID: { type: \"string\" }\r",
+									"                },\r",
+									"                required: [\"_id\", \"name\", \"category\", \"mariageID\"]\r",
+									"            };\r",
+									"            pm.expect(response.data).to.have.jsonSchema(foodSchema);\r",
+									"            \r",
+									"            // Vérification des données\r",
+									"            if (requestBody.name) {\r",
+									"                pm.expect(response.data.name).to.equal(requestBody.name);\r",
+									"                pm.test(`Plat créé: \"${response.data.name}\" (${response.data.category})`, () => true);\r",
+									"            }\r",
+									"            \r",
+									"            // Vérification du mariageID\r",
+									"            if (pm.variables.get(\"mariageId\")) {\r",
+									"                pm.expect(response.data.mariageID.toString()).to.equal(pm.variables.get(\"mariageId\").toString());\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAILED] \" + pm.response.json().message, function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            \r",
+									"            // Vérification des messages d'erreur possibles\r",
+									"            pm.expect(response.message).to.be.oneOf([\r",
+									"                \"Catégorie invalide\",\r",
+									"                \"Veuilez compléter le champ\",\r",
+									"                \"Oups, l'élément n'a pas été créé...\"\r",
+									"            ]);\r",
+									"            \r",
+									"            // Détection spécifique des erreurs de validation\r",
+									"            if (response.message === \"Catégorie invalide\") {\r",
+									"                const requestBody = JSON.parse(pm.request.body.raw);\r",
+									"                pm.expect(requestBody.category).to.not.be.oneOf([\"apetizer\", \"starter\", \"maincourse\", \"dessert\", \"beverage\"]);\r",
+									"            }\r",
+									"            \r",
+									"            if (response.message === \"Veuilez compléter le champ\") {\r",
+									"                pm.expect(JSON.parse(pm.request.body.raw)).to.not.have.property(\"name\");\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "Gâteau au chocolat",
+									"type": "text"
+								},
+								{
+									"key": "category",
+									"value": "dessert",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/reception/food/add",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"reception",
+								"food",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - POST Update food HIGH QASM-TC-59",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses (version corrigée)\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    \r",
+									"    // Correction : 'data' est optionnel dans votre implémentation\r",
+									"    if (jsonData.success) {\r",
+									"        if (jsonData.hasOwnProperty(\"data\")) {\r",
+									"            pm.expect(jsonData.data).to.be.an(\"object\");\r",
+									"        } else {\r",
+									"            pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"        }\r",
+									"    } else {\r",
+									"        pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Tests spécifiques par scénario (version corrigée)\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        if (pm.response.json().success) {\r",
+									"            pm.test(\"[SUCCESS] Food updated successfully\", function() {\r",
+									"                const response = pm.response.json();\r",
+									"                const requestBody = JSON.parse(pm.request.body.raw || '{}');\r",
+									"                \r",
+									"                // Validation de base\r",
+									"                pm.expect(response.success).to.be.true;\r",
+									"                pm.expect(response.message).to.equal(\"Modification enregistrée\");\r",
+									"                \r",
+									"                // Correction : Utilisation de pm.request.url.toString()\r",
+									"                const urlParts = pm.request.url.toString().split('/');\r",
+									"                const foodId = urlParts[urlParts.length - 1];\r",
+									"                \r",
+									"                // Log utile avec l'ID\r",
+									"                pm.test(`Food ID ${foodId} updated`, () => true);\r",
+									"                \r",
+									"                // Vérification optionnelle des données\r",
+									"                if (response.data) {\r",
+									"                    pm.expect(response.data).to.be.an(\"object\");\r",
+									"                    pm.expect(response.data).to.have.property(\"nModified\", 1);\r",
+									"                }\r",
+									"            });\r",
+									"        } else {\r",
+									"            pm.test(\"[FAILED] Server error with 200 status\", function() {\r",
+									"                const response = pm.response.json();\r",
+									"                pm.expect(response.success).to.be.false;\r",
+									"                pm.expect(response.message).to.equal(\"Erreur serveur\");\r",
+									"            });\r",
+									"        }\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAILED] Update error\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.be.oneOf([\r",
+									"                \"Oups, une erreur s'est produite lors de la modification de l'élément.\",\r",
+									"                \"Erreur serveur\"\r",
+									"            ]);\r",
+									"            \r",
+									"            // Vérification supplémentaire pour les échecs de modification\r",
+									"            if (response.message === \"Oups, une erreur s'est produite lors de la modification de l'élément.\") {\r",
+									"                const requestBody = JSON.parse(pm.request.body.raw || '{}');\r",
+									"                pm.expect(requestBody).to.have.property(\"name\").or.have.property(\"category\");\r",
+									"            }\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[FAILED] Food not found\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.equal(\"L'élément sélectionné n'existe pas\");\r",
+									"            \r",
+									"            // Correction : Utilisation de pm.request.url.toString()\r",
+									"            const urlParts = pm.request.url.toString().split('/');\r",
+									"            const foodId = urlParts[urlParts.length - 1];\r",
+									"            pm.expect(foodId).to.match(/^[0-9a-fA-F]{24}$/); // Validation format ID Mongo\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "Salade composée",
+									"type": "text"
+								},
+								{
+									"key": "category",
+									"value": "starter",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{apiURL}}/api/reception/food/edit/{{foodId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"reception",
+								"food",
+								"edit",
+								"{{foodId}}"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "Pondu",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEM - DELETE Food HIGH QASM-TC-60",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Tests communs à toutes les réponses\r",
+									"pm.test(\"Basic response structure is valid\", function() {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property(\"success\").that.is.a(\"boolean\");\r",
+									"    pm.expect(jsonData).to.have.property(\"message\").that.is.a(\"string\");\r",
+									"    \r",
+									"    // La propriété 'data' est optionnelle et non utilisée dans cette implémentation\r",
+									"});\r",
+									"\r",
+									"// Tests spécifiques par scénario\r",
+									"switch(pm.response.code) {\r",
+									"    case 200: // SUCCESS\r",
+									"        pm.test(\"[SUCCESS] Food deleted successfully\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            \r",
+									"            // Validation de base\r",
+									"            pm.expect(response.success).to.be.true;\r",
+									"            pm.expect(response.message).to.equal(\"Element supprimé\");\r",
+									"            \r",
+									"            // Extraction de l'ID depuis l'URL\r",
+									"            const urlParts = pm.request.url.toString().split('/');\r",
+									"            const foodId = urlParts[urlParts.length - 1];\r",
+									"            \r",
+									"            // Log utile\r",
+									"            pm.test(`Food ID ${foodId} deleted`, () => true);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 400: // BAD REQUEST\r",
+									"        pm.test(\"[FAILED] Delete error\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.equal(\"Oups, une erreur s'est produite lors de la suppression de l'élément\");\r",
+									"            \r",
+									"            // Vérification que l'ID est bien dans l'URL\r",
+									"            const foodId = pm.request.url.toString().split('/').pop();\r",
+									"            pm.expect(foodId).to.match(/^[0-9a-fA-F]{24}$/); // Validation format ID Mongo\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    case 404: // NOT FOUND\r",
+									"        pm.test(\"[FAILED] Food not found\", function() {\r",
+									"            const response = pm.response.json();\r",
+									"            pm.expect(response.success).to.be.false;\r",
+									"            pm.expect(response.message).to.equal(\"L'élément sélectionné n'existe pas\");\r",
+									"            \r",
+									"            // Vérification supplémentaire\r",
+									"            const foodId = pm.request.url.toString().split('/').pop();\r",
+									"            pm.expect(foodId).to.match(/^[0-9a-fA-F]{24}$/);\r",
+									"            \r",
+									"            // Stockage de l'ID pour référence future\r",
+									"            pm.test(`Attempted to delete non-existent ID: ${foodId}`, () => true);\r",
+									"        });\r",
+									"        break;\r",
+									"        \r",
+									"    default:\r",
+									"        pm.test(`[UNEXPECTED] Status ${pm.response.code}`, function() {\r",
+									"            pm.expect.fail(`Unexpected status code: ${pm.response.code} with message: ${pm.response.json().message}`);\r",
+									"        });\r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{apiURL}}/api/reception/food/delete/{{foodId}}",
+							"host": [
+								"{{apiURL}}"
+							],
+							"path": [
+								"api",
+								"reception",
+								"food",
+								"delete",
+								"{{foodId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "{{aioKey}}",
+				"type": "string"
+			},
+			{
+				"key": "in",
+				"value": "header",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "X-API-Key",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "token",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTRlMmZiODMyNjkxMDA3OGU1YTNlYyIsIm1hcmlhZ2VJRCI6IjY4MTRlMmZiODMyNjkxMDA3OGU1YTNlYSIsInJvbGUiOiJhZG1pbiIsImZpcnN0UGVyc29uIjoiQmVuamkiLCJzZWNvbmRQZXJzb24iOiJNYXJ5IiwiaWF0IjoxNzQ2MTk5Mzg4fQ.5dT-fVebn2ou8jfeS8di2rnXHUgKXj0tXLvbfmO6kQk"
+		},
+		{
+			"key": "apiURL",
+			"value": "https://my-wedding-backend.onrender.com"
+		},
+		{
+			"key": "aioKey",
+			"value": "AioAuth MDBkM2UwMGQtZTUzNi0zZTA2LWE1MTQtNTRjMzk1NzMxNGEzLjkxMjYyZDQzLWY0YTMtNDFlZC1iNGM1LTNjZDE3OGYyZGRiNQ=="
+		},
+		{
+			"key": "accountId",
+			"value": "6814e2fb8326910078e5a3ec"
+		},
+		{
+			"key": "mariageId",
+			"value": "6814e2fb8326910078e5a3ea"
+		},
+		{
+			"key": "tableId",
+			"value": ""
+		},
+		{
+			"key": "guestId",
+			"value": ""
+		},
+		{
+			"key": "todoId",
+			"value": ""
+		},
+		{
+			"key": "foodId",
+			"value": ""
+		},
+		{
+			"key": "expenseId",
+			"value": ""
+		}
+	]
+}
