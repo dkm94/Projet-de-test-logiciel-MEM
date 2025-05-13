@@ -1,6 +1,6 @@
-# Projet de test logiciel MEM
+# <h1 style="text-align:center;">_Projet de test logiciel MEM_</h1>
 
-![Illustration](lien_vers_image.png)
+![Illustration](home.gif)
 
 ## Objet de test
 Site web : [https://www.mariage-en-main.com](https://www.mariage-en-main.com)  
@@ -28,5 +28,3 @@ Ce repository contient :
 
 ## Statut du projet
 Débuté mi-mars 2023, le projet est actuellement toujours en cours de développement. Les mises à jour sont régulièrement poussées sur ce repository.
-
-## Structure du projet
