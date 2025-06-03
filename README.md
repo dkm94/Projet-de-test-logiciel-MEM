@@ -12,7 +12,7 @@ Créer une suite de tests exhaustive pour valider les fonctionnalités clés du 
 ## Outils et technologies utilisés
 - **Gestion de tests** : AIO Tests, Jira
 - **Développement** : VSCode, Javascript
-- **Tests automatisés** : Cypress, Postman
+- **Tests automatisés** : Cypress, Postman, Newman
 - **Documentation** : Excel, GitHub
 - **Collaboration** : GitHub (versionning)
 
