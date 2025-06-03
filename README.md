@@ -27,4 +27,4 @@ Ce repository contient :
 **Note** : Le code source du site testé se trouve dans un repository privé.
 
 ## Statut du projet
-Débuté mi-mars 2023, le projet est actuellement toujours en cours de développement. Les mises à jour sont régulièrement poussées sur ce repository.
+Débuté mi-mars 2025, le projet est actuellement toujours en cours de développement. Les mises à jour sont régulièrement poussées sur ce repository.
